@@ -14,6 +14,7 @@ final class AppViewModel {
     var selectedSizes: [String: String] = [:]
     var modelToDelete: LocalModel?
     var deleteError: String?
+    var detailModel: OllamaModel?
 
     private var pullTasks: [String: Task<Void, Never>] = [:]
 
@@ -211,6 +212,9 @@ struct ContentView: View {
         }
         .frame(minWidth: 700, minHeight: 500)
         .task { await vm.load() }
+        .sheet(item: $vm.detailModel) { model in
+            ModelDetailView(model: model, isInstalled: vm.isInstalled(model))
+        }
         .alert("Delete Model", isPresented: Binding(
             get: { vm.modelToDelete != nil },
             set: { if !$0 { vm.modelToDelete = nil } }
@@ -302,6 +306,7 @@ struct ContentView: View {
                         onPull: { vm.pullModel(model) },
                         onCancel: { vm.cancelPull(model) }
                     )
+                    .onTapGesture { vm.detailModel = model }
                     Divider()
                         .padding(.leading, 20)
                 }

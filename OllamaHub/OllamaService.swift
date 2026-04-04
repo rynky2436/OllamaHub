@@ -99,6 +99,106 @@ actor OllamaService {
         }
     }
 
+    // MARK: - Fetch all tags for a model (scrape tags page)
+
+    func fetchModelTags(name: String) async throws -> [ModelTag] {
+        guard let url = URL(string: "https://ollama.com/library/\(name)/tags") else {
+            throw OllamaError.invalidURL
+        }
+        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let html = String(data: data, encoding: .utf8) else {
+            throw OllamaError.parseError
+        }
+
+        let tagLinks = matches(for: "href=\"/library/\(NSRegularExpression.escapedPattern(for: name)):([^\"]+)\"", in: html)
+        let uniqueTags = tagLinks.reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
+        let allSizes = matches(for: #"(\d+(?:\.\d+)?\s*(?:GB|MB|KB|B))"#, in: html)
+        // Sizes appear doubled in the HTML (mobile + desktop views)
+        let sizes = stride(from: 0, to: allSizes.count, by: 2).map { allSizes[$0] }
+
+        var result: [ModelTag] = []
+        for (i, tag) in uniqueTags.enumerated() {
+            result.append(ModelTag(
+                name: "\(name):\(tag)",
+                tag: tag,
+                size: i < sizes.count ? sizes[i] : ""
+            ))
+        }
+        return result
+    }
+
+    // MARK: - Show model info (local)
+
+    func showModel(name: String) async throws -> ModelInfo {
+        guard let url = URL(string: "\(localBase)/api/show") else {
+            throw OllamaError.invalidURL
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = "{\"name\":\"\(name)\"}".data(using: .utf8)
+
+        let (data, _) = try await URLSession.shared.data(for: request)
+        return try JSONDecoder().decode(ModelInfo.self, from: data)
+    }
+
+    // MARK: - Chat with streaming
+
+    func chat(
+        model: String,
+        messages: [(role: String, content: String)],
+        onToken: @escaping @Sendable (String) -> Void
+    ) async throws {
+        guard let url = URL(string: "\(localBase)/api/chat") else {
+            throw OllamaError.invalidURL
+        }
+
+        let msgArray = messages.map { "{\"role\":\"\($0.role)\",\"content\":\"\(escapeJSON($0.content))\"}" }
+        let body = "{\"model\":\"\(model)\",\"messages\":[\(msgArray.joined(separator: ","))],\"stream\":true}"
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body.data(using: .utf8)
+
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw OllamaError.chatFailed("Server error")
+        }
+
+        let decoder = JSONDecoder()
+        for try await line in bytes.lines {
+            guard let lineData = line.data(using: .utf8),
+                  let resp = try? decoder.decode(ChatResponseLine.self, from: lineData) else { continue }
+            if let content = resp.message?.content, !content.isEmpty {
+                onToken(content)
+            }
+            if resp.done { break }
+        }
+    }
+
+    // MARK: - List running models
+
+    func listRunning() async throws -> [RunningModel] {
+        guard let url = URL(string: "\(localBase)/api/ps") else {
+            throw OllamaError.invalidURL
+        }
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let response = try JSONDecoder().decode(RunningModelsResponse.self, from: data)
+        return response.models
+    }
+
+    // MARK: - Helpers
+
+    private func escapeJSON(_ string: String) -> String {
+        string
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "\\r")
+            .replacingOccurrences(of: "\t", with: "\\t")
+    }
+
     // MARK: - HTML Parsing
 
     private func parseLibraryHTML(_ html: String) -> [OllamaModel] {
@@ -200,6 +300,7 @@ enum OllamaError: LocalizedError {
     case parseError
     case pullFailed(String)
     case deleteFailed(String)
+    case chatFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -207,6 +308,7 @@ enum OllamaError: LocalizedError {
         case .parseError: return "Failed to parse response"
         case .pullFailed(let msg): return "Pull failed: \(msg)"
         case .deleteFailed(let name): return "Failed to delete \(name)"
+        case .chatFailed(let msg): return "Chat failed: \(msg)"
         }
     }
 }
