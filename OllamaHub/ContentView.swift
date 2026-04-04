@@ -188,6 +188,53 @@ struct ContentView: View {
                 Spacer()
                 ProgressView("Loading models...")
                 Spacer()
+            } else if !vm.ollamaRunning && !vm.isLoading {
+                Spacer()
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.orange)
+                    Text("Ollama is not running")
+                        .font(.title2.bold())
+                    Text("OllamaHub requires Ollama to browse and pull models.\nMake sure Ollama is installed and running.")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    HStack(spacing: 12) {
+                        Button {
+                            NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications/Ollama.app"))
+                            // Wait a moment for Ollama to start, then retry
+                            Task {
+                                try? await Task.sleep(for: .seconds(3))
+                                await vm.load()
+                            }
+                        } label: {
+                            Label("Start Ollama", systemImage: "play.circle")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+
+                        Button {
+                            if let url = URL(string: "https://ollama.com/download") {
+                                NSWorkspace.shared.open(url)
+                            }
+                        } label: {
+                            Label("Download Ollama", systemImage: "arrow.down.circle")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+
+                        Button {
+                            Task { await vm.load() }
+                        } label: {
+                            Label("Retry", systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                    }
+                }
+                .padding(40)
+                Spacer()
             } else if vm.selectedTab == .myModels {
                 myModelsList
             } else if vm.selectedTab == .chat {
