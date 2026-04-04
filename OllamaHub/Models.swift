@@ -20,6 +20,7 @@ enum ModelTab: String, CaseIterable {
     case local = "Local"
     case cloud = "Cloud"
     case myModels = "My Models"
+    case chat = "Chat"
 }
 
 // MARK: - Local Ollama API Models

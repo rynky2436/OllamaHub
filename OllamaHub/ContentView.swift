@@ -25,7 +25,8 @@ final class AppViewModel {
         case .all: break
         case .local: result = result.filter { !$0.localSizes.isEmpty }
         case .cloud: result = result.filter { $0.hasCloud }
-        case .myModels: return [] // handled separately
+        case .myModels: return []
+        case .chat: return []
         }
 
         if !searchText.isEmpty {
@@ -178,7 +179,6 @@ final class AppViewModel {
 
 struct ContentView: View {
     @State private var vm = AppViewModel()
-
     var body: some View {
         VStack(spacing: 0) {
             headerBar
@@ -190,6 +190,8 @@ struct ContentView: View {
                 Spacer()
             } else if vm.selectedTab == .myModels {
                 myModelsList
+            } else if vm.selectedTab == .chat {
+                ChatView()
             } else if let error = vm.errorMessage {
                 Spacer()
                 VStack(spacing: 12) {
@@ -247,7 +249,7 @@ struct ContentView: View {
                 }
             }
             .pickerStyle(.segmented)
-            .frame(width: 300)
+            .frame(width: 370)
 
             Spacer()
 
