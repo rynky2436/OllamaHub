@@ -4,7 +4,7 @@ actor OllamaService {
     static let shared = OllamaService()
 
     private let localBase = "http://localhost:11434"
-    private let libraryURL = "https://ollama.com/library"
+    private let libraryURL = "https://ollama.com/library?sort=newest"
 
     // MARK: - Check if Ollama is running
 

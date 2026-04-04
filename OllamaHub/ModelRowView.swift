@@ -28,7 +28,6 @@ struct ModelRowView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
-            // Model info
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Text(model.name)
@@ -67,7 +66,6 @@ struct ModelRowView: View {
                     .lineLimit(2)
 
                 HStack(spacing: 6) {
-                    // Selectable size badges
                     if !displaySizes.isEmpty {
                         ForEach(displaySizes.prefix(6), id: \.self) { size in
                             Button {
@@ -93,12 +91,10 @@ struct ModelRowView: View {
                     Spacer()
                         .frame(width: 4)
 
-                    // Pull count
                     Label(model.pullCount, systemImage: "arrow.down.circle")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    // Updated
                     Text(model.updated)
                         .font(.caption)
                         .foregroundStyle(.tertiary)
@@ -108,7 +104,6 @@ struct ModelRowView: View {
 
             Spacer()
 
-            // Download button / progress
             downloadSection
                 .frame(width: 180)
         }
