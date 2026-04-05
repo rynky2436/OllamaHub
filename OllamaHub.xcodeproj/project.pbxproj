@@ -15,6 +15,7 @@
 		AA000006 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000016; };
 		AA000007A /* ModelDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000019; };
 		AA000008A /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001A; };
+		AA000009A /* BenchmarkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001B; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,7 @@
 		AA000018 /* OllamaHub.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OllamaHub.entitlements; sourceTree = "<group>"; };
 		AA000019 /* ModelDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDetailView.swift; sourceTree = "<group>"; };
 		AA00001A /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		AA00001B /* BenchmarkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BenchmarkView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +64,7 @@
 				AA000015 /* ModelRowView.swift */,
 				AA000019 /* ModelDetailView.swift */,
 				AA00001A /* ChatView.swift */,
+				AA00001B /* BenchmarkView.swift */,
 				AA000016 /* Assets.xcassets */,
 				AA000017 /* Info.plist */,
 				AA000018 /* OllamaHub.entitlements */,
@@ -117,7 +120,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		AA00000C /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (AA000001, AA000002, AA000003, AA000004, AA000005, AA000007A, AA000008A); runOnlyForDeploymentPostprocessing = 0; };
+		AA00000C /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (AA000001, AA000002, AA000003, AA000004, AA000005, AA000007A, AA000008A, AA000009A); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */

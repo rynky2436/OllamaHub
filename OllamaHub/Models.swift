@@ -21,6 +21,7 @@ enum ModelTab: String, CaseIterable {
     case cloud = "Cloud"
     case myModels = "My Models"
     case chat = "Chat"
+    case bench = "Bench"
 }
 
 // MARK: - Local Ollama API Models
@@ -119,6 +120,22 @@ struct ChatResponseLine: Codable {
     let model: String?
     let message: ChatResponseMessage?
     let done: Bool
+    let totalDuration: Int64?
+    let loadDuration: Int64?
+    let promptEvalCount: Int?
+    let promptEvalDuration: Int64?
+    let evalCount: Int?
+    let evalDuration: Int64?
+
+    enum CodingKeys: String, CodingKey {
+        case model, message, done
+        case totalDuration = "total_duration"
+        case loadDuration = "load_duration"
+        case promptEvalCount = "prompt_eval_count"
+        case promptEvalDuration = "prompt_eval_duration"
+        case evalCount = "eval_count"
+        case evalDuration = "eval_duration"
+    }
 }
 
 struct ChatResponseMessage: Codable {
@@ -145,5 +162,30 @@ struct RunningModel: Codable, Identifiable {
         case name, model, details
         case sizeVram = "size_vram"
         case expiresAt = "expires_at"
+    }
+}
+
+// MARK: - Benchmark
+
+struct BenchmarkResult: Identifiable {
+    let id = UUID()
+    let modelName: String
+    let output: String
+    let totalDuration: Double    // seconds
+    let loadDuration: Double     // seconds
+    let promptEvalCount: Int     // prompt tokens
+    let promptEvalDuration: Double // seconds
+    let evalCount: Int           // generated tokens
+    let evalDuration: Double     // seconds
+    let vramBytes: Int64         // VRAM used
+
+    var tokensPerSecond: Double {
+        evalDuration > 0 ? Double(evalCount) / evalDuration : 0
+    }
+    var timeToFirstToken: Double {
+        promptEvalDuration + loadDuration
+    }
+    var promptTokensPerSecond: Double {
+        promptEvalDuration > 0 ? Double(promptEvalCount) / promptEvalDuration : 0
     }
 }

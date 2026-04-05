@@ -27,6 +27,7 @@ final class AppViewModel {
         case .cloud: result = result.filter { $0.hasCloud }
         case .myModels: return []
         case .chat: return []
+        case .bench: return []
         }
 
         if !searchText.isEmpty {
@@ -239,6 +240,8 @@ struct ContentView: View {
                 myModelsList
             } else if vm.selectedTab == .chat {
                 ChatView()
+            } else if vm.selectedTab == .bench {
+                BenchmarkView()
             } else if let error = vm.errorMessage {
                 Spacer()
                 VStack(spacing: 12) {
@@ -296,7 +299,7 @@ struct ContentView: View {
                 }
             }
             .pickerStyle(.segmented)
-            .frame(width: 370)
+            .frame(width: 440)
 
             Spacer()
 

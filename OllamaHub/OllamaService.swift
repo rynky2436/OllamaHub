@@ -81,6 +81,48 @@ actor OllamaService {
         }
     }
 
+    // MARK: - Benchmark a model (non-streaming, returns metrics)
+
+    func benchmark(model: String, prompt: String) async throws -> BenchmarkResult {
+        guard let url = URL(string: "\(localBase)/api/chat") else {
+            throw OllamaError.invalidURL
+        }
+
+        let escaped = escapeJSON(prompt)
+        let body = "{\"model\":\"\(model)\",\"messages\":[{\"role\":\"user\",\"content\":\"\(escaped)\"}],\"stream\":false}"
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body.data(using: .utf8)
+        request.timeoutInterval = 600 // 10 min for large models
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw OllamaError.chatFailed("Benchmark request failed")
+        }
+
+        let decoded = try JSONDecoder().decode(ChatResponseLine.self, from: data)
+
+        // Get VRAM usage
+        var vram: Int64 = 0
+        if let running = try? await listRunning() {
+            vram = running.first(where: { $0.name == model })?.sizeVram ?? 0
+        }
+
+        return BenchmarkResult(
+            modelName: model,
+            output: decoded.message?.content ?? "",
+            totalDuration: Double(decoded.totalDuration ?? 0) / 1_000_000_000,
+            loadDuration: Double(decoded.loadDuration ?? 0) / 1_000_000_000,
+            promptEvalCount: decoded.promptEvalCount ?? 0,
+            promptEvalDuration: Double(decoded.promptEvalDuration ?? 0) / 1_000_000_000,
+            evalCount: decoded.evalCount ?? 0,
+            evalDuration: Double(decoded.evalDuration ?? 0) / 1_000_000_000,
+            vramBytes: vram
+        )
+    }
+
     // MARK: - Delete a model
 
     func deleteModel(name: String) async throws {
